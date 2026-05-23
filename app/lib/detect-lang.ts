@@ -10,6 +10,7 @@ export function detectLangFromHeader(acceptLanguage: string | null): Lang {
     if (tag.startsWith("zh")) return "zh";
     if (tag.startsWith("ar")) return "ar";
     if (tag.startsWith("vi")) return "vi";
+    if (tag.startsWith("id")) return "id";
     if (tag.startsWith("en")) return "en";
   }
   return "en";

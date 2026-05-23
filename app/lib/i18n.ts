@@ -5,6 +5,7 @@ export const LANG_LABEL: Record<Lang, string> = {
   zh: "中文",
   ar: "العربية",
   vi: "TV",
+  id: "ID",
 };
 
 export const LANG_NAME: Record<Lang, string> = {
@@ -12,6 +13,7 @@ export const LANG_NAME: Record<Lang, string> = {
   zh: "Mandarin Chinese (Simplified)",
   ar: "Arabic",
   vi: "Vietnamese",
+  id: "Indonesian (Bahasa Indonesia)",
 };
 
 export const LOADING_COPY: Record<
@@ -53,6 +55,16 @@ export const LOADING_COPY: Record<
       "Dịch phản hồi",
     ],
   },
+  id: {
+    title: "Menjelajahi lingkungan…",
+    sub: "Memeriksa jam buka, pengelola, dan cara masuk.",
+    steps: [
+      "Membaca area Anda",
+      "Mencocokkan program",
+      "Memeriksa jam & akses",
+      "Menerjemahkan balasan",
+    ],
+  },
 };
 
 export const RESULT_COPY: Record<
@@ -63,6 +75,7 @@ export const RESULT_COPY: Record<
   zh: { title: "三个就在附近的去处。", restart: "↺ 重新搜索" },
   ar: { title: "ثلاثة أماكن قريبة منك.", restart: "↺ بحث جديد" },
   vi: { title: "Ba địa điểm gần nhà bạn.", restart: "↺ Tìm lại" },
+  id: { title: "Tiga tempat, dekat dari rumah.", restart: "↺ Cari ulang" },
 };
 
 export const CARD_LABELS: Record<
@@ -73,6 +86,7 @@ export const CARD_LABELS: Record<
   zh: { address: "地址", hours: "开放时间", access: "如何参与" },
   ar: { address: "العنوان", hours: "ساعات العمل", access: "كيفية الوصول" },
   vi: { address: "Địa chỉ", hours: "Giờ mở cửa", access: "Cách tham gia" },
+  id: { address: "Alamat", hours: "Jam buka", access: "Cara masuk" },
 };
 
 export const CHAT_COPY: Record<
@@ -102,5 +116,11 @@ export const CHAT_COPY: Record<
     send: "Gửi",
     heading: "Hỏi thêm",
     unverified: "Chưa xác minh — gọi trước để xác nhận",
+  },
+  id: {
+    placeholder: "Tanyakan lebih lanjut tentang layanan ini…",
+    send: "Kirim",
+    heading: "Tanya lebih lanjut",
+    unverified: "Belum diverifikasi — hubungi untuk konfirmasi",
   },
 };

@@ -1,4 +1,4 @@
-export type Lang = "en" | "zh" | "ar" | "vi";
+export type Lang = "en" | "zh" | "ar" | "vi" | "id";
 
 export type Demographic =
   | ""
