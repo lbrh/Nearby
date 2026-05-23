@@ -67,7 +67,8 @@ You will receive a SUBURB, a free-text NEED, a DEMOGRAPHIC context (may be empty
       "address": "Street address with suburb",
       "hours": "Concrete opening hours or session times",
       "access": "How to get in — walk in, book, phone, registration, cost",
-      "why": "One sentence on why this fits their need + demographic"
+      "why": "One sentence on why this fits their need + demographic",
+      "website": "Official website URL if you are confident it is correct, otherwise omit this field"
     },
     { ... },
     { ... }

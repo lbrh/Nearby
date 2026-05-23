@@ -1,7 +1,5 @@
-import type { Lang } from "./types";
-
-// Maps Accept-Language header to a supported lang
-export function detectLangFromHeader(acceptLanguage: string | null): Lang {
+// Maps Accept-Language header to a language string
+export function detectLangFromHeader(acceptLanguage: string | null): string {
   if (!acceptLanguage) return "en";
   const tags = acceptLanguage
     .split(",")
@@ -17,8 +15,8 @@ export function detectLangFromHeader(acceptLanguage: string | null): Lang {
 }
 
 // Detects Arabic or Chinese script in a string — used while the user types
-export function detectLangFromText(text: string): Lang | null {
+export function detectLangFromText(text: string): string | null {
   if (/[؀-ۿ]/.test(text)) return "ar";
-  if (/[一-鿿㐀-䶿豈-﫿]/.test(text)) return "zh";
+  if (/[一-鿿㐀-䶿]/.test(text)) return "zh";
   return null;
 }

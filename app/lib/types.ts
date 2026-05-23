@@ -5,13 +5,14 @@ export type Demographic =
   | "International student"
   | "Elderly resident"
   | "New arrival"
-  | "Local family";
+  | "Local family"
+  | "Other";
 
 export interface NearbyRequest {
   suburb: string;
   need: string;
-  demographic: Demographic;
-  lang: Lang;
+  demographic: string;
+  lang: string;
 }
 
 export interface NearbyService {
@@ -21,6 +22,7 @@ export interface NearbyService {
   hours: string;
   access: string;
   why: string;
+  website?: string;
   note?: string;
 }
 
@@ -38,7 +40,7 @@ export interface FollowUpRequest {
   suburb: string;
   need: string;
   demographic: string;
-  lang: Lang;
+  lang: string;
   services: NearbyService[];
   history: ChatMessage[];
   question: string;

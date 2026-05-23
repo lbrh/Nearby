@@ -65,6 +65,27 @@ body::before {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Skip-to-main link — visually hidden until focused */
+.skip-link {
+  position: fixed;
+  top: -100%;
+  left: 12px;
+  z-index: 9999;
+  padding: 10px 18px;
+  background: var(--color-ink);
+  color: var(--color-bg);
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 0 0 8px 8px;
+  text-decoration: none;
+  transition: top 0.15s;
+}
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid var(--color-teal);
+  outline-offset: 2px;
+}
+
 button {
   cursor: pointer;
   font-family: inherit;
@@ -121,6 +142,10 @@ button {
   box-shadow: 0 0 0 4px var(--color-teal-tint);
   background: #fff;
 }
+.input-base:focus-visible {
+  outline: 3px solid var(--color-teal);
+  outline-offset: 2px;
+}
 
 .select-base {
   appearance: none;
@@ -152,6 +177,10 @@ button {
 .btn:hover {
   transform: translateY(-1px);
   background: #000;
+}
+.btn:focus-visible {
+  outline: 3px solid var(--color-teal);
+  outline-offset: 3px;
 }
 .btn-primary {
   background: var(--color-teal);
@@ -223,6 +252,10 @@ button {
 }
 .seg button.active .native {
   opacity: 0.8;
+}
+.seg button:focus-visible {
+  outline: 3px solid var(--color-teal);
+  outline-offset: 2px;
 }
 @media (max-width: 480px) {
   .seg {
@@ -348,4 +381,36 @@ button {
 }
 [dir="rtl"] .eyebrow::before {
   margin-left: 0;
+}
+
+/* Respect reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .screen-fade {
+    animation: none;
+  }
+  .ping::after {
+    animation: none;
+  }
+  .step.active .tick {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* High-contrast mode adjustments */
+@media (forced-colors: active) {
+  .btn,
+  .input-base,
+  .card {
+    border: 2px solid ButtonText;
+  }
+  .btn:focus-visible,
+  .input-base:focus-visible {
+    outline: 3px solid Highlight;
+  }
 }

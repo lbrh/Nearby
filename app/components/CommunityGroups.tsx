@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import type { CommunityGroup } from "@/app/lib/types";
+import { useCopy } from "@/app/lib/copy-context";
 
 export default function CommunityGroups({
   suburb,
@@ -10,6 +11,8 @@ export default function CommunityGroups({
   suburb: string;
   onSubmitGroup: () => void;
 }) {
+  const copy = useCopy();
+  const g = copy.groups;
   const [groups, setGroups] = useState<CommunityGroup[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,14 +29,14 @@ export default function CommunityGroups({
     <div className="mt-8 border-t border-line pt-6">
       <div className="mb-4 flex items-center justify-between">
         <h3 className="m-0 font-mono text-[11px] uppercase tracking-[0.16em] text-ink-3">
-          Community groups{suburb ? ` in ${suburb}` : ""}
+          {g.heading}{suburb ? ` — ${suburb}` : ""}
         </h3>
         <button
           type="button"
           onClick={onSubmitGroup}
           className="inline-flex items-center gap-1.5 rounded-full border border-line bg-paper px-3 py-1.5 font-mono text-[10.5px] uppercase tracking-[0.1em] text-ink-2 hover:border-line-strong hover:text-ink"
         >
-          + Add yours
+          {g.addYours}
         </button>
       </div>
 
@@ -44,13 +47,13 @@ export default function CommunityGroups({
       {!loading && groups.length === 0 && (
         <div className="rounded-xl border border-dashed border-line px-5 py-6 text-center">
           <p className="m-0 text-[14.5px] text-ink-2">
-            No groups listed here yet.{" "}
+            {g.empty}{" "}
             <button
               type="button"
               className="text-teal underline-offset-2 hover:underline"
               onClick={onSubmitGroup}
             >
-              Be the first to add one.
+              {g.beFirst}
             </button>
           </p>
         </div>
@@ -68,6 +71,7 @@ export default function CommunityGroups({
 }
 
 function GroupCard({ group }: { group: CommunityGroup }) {
+  const { groups: g } = useCopy();
   return (
     <article className="rounded-2xl border border-line bg-paper p-5">
       <div className="mb-1 flex flex-wrap items-start justify-between gap-2">
@@ -92,19 +96,19 @@ function GroupCard({ group }: { group: CommunityGroup }) {
       <dl className="m-0 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 border-t border-line pt-3">
         {group.schedule && (
           <>
-            <dt className="pt-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-3">When</dt>
+            <dt className="pt-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-3">{g.when}</dt>
             <dd className="m-0 text-[13.5px] text-ink">{group.schedule}</dd>
           </>
         )}
         {group.address && (
           <>
-            <dt className="pt-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-3">Where</dt>
+            <dt className="pt-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-3">{g.where}</dt>
             <dd className="m-0 text-[13.5px] text-ink">{group.address}</dd>
           </>
         )}
         {group.phone && (
           <>
-            <dt className="pt-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-3">Phone</dt>
+            <dt className="pt-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-3">{g.phone}</dt>
             <dd className="m-0 text-[13.5px] text-ink">
               <a href={`tel:${group.phone}`} className="text-teal hover:underline">
                 {group.phone}
@@ -114,7 +118,7 @@ function GroupCard({ group }: { group: CommunityGroup }) {
         )}
         {group.email && (
           <>
-            <dt className="pt-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-3">Email</dt>
+            <dt className="pt-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-3">{g.email}</dt>
             <dd className="m-0 text-[13.5px] text-ink">
               <a href={`mailto:${group.email}`} className="text-teal hover:underline">
                 {group.email}
@@ -124,7 +128,7 @@ function GroupCard({ group }: { group: CommunityGroup }) {
         )}
         {group.website && (
           <>
-            <dt className="pt-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-3">Web</dt>
+            <dt className="pt-0.5 font-mono text-[10px] uppercase tracking-[0.14em] text-ink-3">{g.web}</dt>
             <dd className="m-0 text-[13.5px] text-ink">
               <a
                 href={group.website}

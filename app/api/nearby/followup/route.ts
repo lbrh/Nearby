@@ -1,5 +1,4 @@
 import { FOLLOWUP_SYSTEM_PROMPT } from "@/app/lib/system-prompt";
-import { LANG_NAME } from "@/app/lib/i18n";
 import type { FollowUpRequest, FollowUpResponse } from "@/app/lib/types";
 
 export const runtime = "nodejs";
@@ -30,9 +29,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "question is required." }, { status: 400 });
   }
 
-  const langName = LANG_NAME[lang] ?? "English";
-
-  const contextBlock = `Context: the user is in ${suburb}, looking for "${need}"${demographic ? `, demographic: ${demographic}` : ""}. Language: ${lang} (${langName}).
+  const contextBlock = `Context: the user is in ${suburb}, looking for "${need}"${demographic ? `, demographic: ${demographic}` : ""}. Language: ${lang}.
 
 Services already shown:
 ${services

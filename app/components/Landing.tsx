@@ -1,15 +1,24 @@
 "use client";
 
+import LanguagePicker from "./LanguagePicker";
+import OpenNow from "./OpenNow";
+
 export default function Landing({
   onStart,
+  onHowItWorks,
   onSubmitGroup,
+  currentLang,
+  onLangChange,
 }: {
   onStart: () => void;
+  onHowItWorks: () => void;
   onSubmitGroup: () => void;
+  currentLang: string;
+  onLangChange: (lang: string) => void;
 }) {
   return (
-    <section className="screen-fade flex flex-1 flex-col justify-between pt-3">
-      <div className="mt-[14vh] sm:mt-[12vh]">
+    <section className="screen-fade flex flex-1 flex-col pt-3">
+      <div className="mt-[12vh] lg:mt-[10vh]">
         <div className="eyebrow mb-6">A community connector</div>
         <h1 className="m-0 mb-[22px] text-balance font-display text-[clamp(54px,12vw,88px)] leading-[0.96] tracking-[-0.02em] text-ink">
           Find what you need, <em className="text-teal italic">nearby.</em>
@@ -21,7 +30,7 @@ export default function Landing({
         <div className="flex flex-wrap items-center gap-3.5">
           <button type="button" className="btn btn-primary" onClick={onStart}>
             Get started
-            <svg className="arrow" viewBox="0 0 24 24">
+            <svg className="arrow" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 d="M5 12h14M13 6l6 6-6 6"
                 strokeLinecap="round"
@@ -32,11 +41,7 @@ export default function Landing({
           <button
             type="button"
             className="btn btn-ghost"
-            onClick={() =>
-              alert(
-                "Tell Nearby your suburb and what you need.\n\nNearby reads from a working knowledge of City of Melbourne community gardens, food relief, libraries, repair cafés and council grants — then suggests 3 specific places with addresses, hours and how to get in.",
-              )
-            }
+            onClick={onHowItWorks}
           >
             How it works
           </button>
@@ -50,7 +55,9 @@ export default function Landing({
         </div>
       </div>
 
-      <div className="mt-16 grid grid-cols-1 gap-x-4 gap-y-5 border-t border-line pt-[22px] text-[13.5px] leading-[1.5] text-ink-2 sm:grid-cols-2 sm:gap-y-7">
+      <OpenNow />
+
+      <div className="mt-10 grid grid-cols-1 gap-x-4 gap-y-5 border-t border-line pt-[22px] text-[13.5px] leading-[1.5] text-ink-2 sm:grid-cols-2 sm:gap-y-7">
         <Cell k="For">
           <strong className="font-medium text-ink">
             Residents, students, new arrivals
@@ -61,10 +68,8 @@ export default function Landing({
           <strong className="font-medium text-ink">City of Melbourne</strong> —
           community gardens, food relief, libraries, repair cafés, grants.
         </Cell>
-        <Cell k="In">
-          <strong className="font-medium text-ink">
-            English · 中文 · العربية · Tiếng Việt
-          </strong>
+        <Cell k="Language">
+          <LanguagePicker currentLang={currentLang} onSelect={onLangChange} />
         </Cell>
         <Cell k="Built with">
           <strong className="font-medium text-ink">

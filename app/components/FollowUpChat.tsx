@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import type { Lang, NearbyService, ChatMessage } from "@/app/lib/types";
-import { CHAT_COPY } from "@/app/lib/i18n";
+import type { NearbyService, ChatMessage } from "@/app/lib/types";
+import { useCopy } from "@/app/lib/copy-context";
 
 interface Props {
-  lang: Lang;
+  lang: string;
   suburb: string;
   need: string;
   demographic: string;
@@ -13,8 +13,8 @@ interface Props {
 }
 
 export default function FollowUpChat({ lang, suburb, need, demographic, services }: Props) {
-  const copy = CHAT_COPY[lang] ?? CHAT_COPY.en;
-  const isRtl = lang === "ar";
+  const copy = useCopy();
+  const isRtl = ["ar", "Arabic", "he", "Hebrew", "fa", "Persian", "ur", "Urdu"].includes(lang);
 
   const [history, setHistory] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -76,11 +76,11 @@ export default function FollowUpChat({ lang, suburb, need, demographic, services
   return (
     <div className="mt-6 border-t border-line pt-6" dir={isRtl ? "rtl" : "ltr"}>
       <h3 className="m-0 mb-4 font-mono text-[11px] uppercase tracking-[0.16em] text-ink-3">
-        {copy.heading}
+        {copy.chat.heading}
       </h3>
 
       {history.length > 0 && (
-        <div className="mb-4 flex flex-col gap-3">
+        <div className="mb-4 flex flex-col gap-3" aria-live="polite" aria-label="Conversation">
           {history.map((msg, i) => (
             <div
               key={i}
@@ -94,8 +94,12 @@ export default function FollowUpChat({ lang, suburb, need, demographic, services
             </div>
           ))}
           {loading && (
-            <div className="mr-auto max-w-[90%] rounded-xl border border-line bg-paper px-4 py-3">
-              <span className="inline-flex gap-1">
+            <div
+              role="status"
+              aria-label="Loading response"
+              className="mr-auto max-w-[90%] rounded-xl border border-line bg-paper px-4 py-3"
+            >
+              <span className="inline-flex gap-1" aria-hidden="true">
                 <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-ink-3 [animation-delay:0ms]" />
                 <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-ink-3 [animation-delay:150ms]" />
                 <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-ink-3 [animation-delay:300ms]" />
@@ -117,10 +121,12 @@ export default function FollowUpChat({ lang, suburb, need, demographic, services
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={copy.placeholder}
+          placeholder={copy.chat.placeholder}
           rows={2}
           disabled={loading}
-          className="flex-1 resize-none rounded-xl border border-line bg-paper px-4 py-3 text-[14.5px] text-ink placeholder:text-ink-3 focus:border-teal focus:outline-none disabled:opacity-50"
+          aria-label={copy.chat.placeholder}
+          aria-multiline="true"
+          className="flex-1 resize-none rounded-xl border border-line bg-paper px-4 py-3 text-[14.5px] text-ink placeholder:text-ink-3 focus:border-teal focus:outline-none focus-visible:outline-2 focus-visible:outline-teal disabled:opacity-50"
         />
         <button
           type="button"
@@ -128,7 +134,7 @@ export default function FollowUpChat({ lang, suburb, need, demographic, services
           disabled={!input.trim() || loading}
           className="shrink-0 rounded-xl bg-teal px-4 py-3 text-[13.5px] font-medium text-white hover:bg-teal-deep disabled:cursor-not-allowed disabled:opacity-40"
         >
-          {copy.send}
+          {copy.chat.send}
         </button>
       </div>
     </div>
