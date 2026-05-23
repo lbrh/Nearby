@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { BUILT_IN, type AppCopy } from "./app-copy";
+import { BUILT_IN, getBuiltInCode, type AppCopy } from "./app-copy";
 
 const CopyContext = createContext<AppCopy>(BUILT_IN.en);
 
@@ -36,15 +36,17 @@ export function CopyProvider({
   children: ReactNode;
   lang: string;
 }) {
-  const normLang = lang.toLowerCase().split("-")[0]; // "zh-CN" → "zh"
-  const builtIn = BUILT_IN[normLang] ?? null;
+  const code = getBuiltInCode(lang);
+  const builtIn = code ? BUILT_IN[code] : null;
 
   const [copy, setCopy] = useState<AppCopy>(builtIn ?? BUILT_IN.en);
 
   useEffect(() => {
+    const currentCode = getBuiltInCode(lang);
+    
     // Built-in: use immediately
-    if (BUILT_IN[normLang]) {
-      setCopy(BUILT_IN[normLang]);
+    if (currentCode && BUILT_IN[currentCode]) {
+      setCopy(BUILT_IN[currentCode]);
       return;
     }
 
@@ -52,8 +54,11 @@ export function CopyProvider({
     try {
       const cached = localStorage.getItem(cacheKey(lang));
       if (cached) {
-        setCopy(JSON.parse(cached) as AppCopy);
-        return;
+        const parsed = JSON.parse(cached) as any;
+        if (parsed && parsed.landing && parsed.howItWorks) {
+          setCopy(parsed as AppCopy);
+          return;
+        }
       }
     } catch {
       // ignore
@@ -73,7 +78,7 @@ export function CopyProvider({
         // fall back to English silently
         setCopy(BUILT_IN.en);
       });
-  }, [lang, normLang]);
+  }, [lang]);
 
   return <CopyContext.Provider value={copy}>{children}</CopyContext.Provider>;
 }

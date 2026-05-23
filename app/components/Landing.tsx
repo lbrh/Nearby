@@ -1,5 +1,6 @@
 "use client";
 
+import { useCopy } from "../lib/copy-context";
 import LanguagePicker from "./LanguagePicker";
 import OpenNow from "./OpenNow";
 
@@ -16,20 +17,21 @@ export default function Landing({
   currentLang: string;
   onLangChange: (lang: string) => void;
 }) {
+  const copy = useCopy();
+
   return (
     <section className="screen-fade flex flex-1 flex-col pt-3">
       <div className="mt-[12vh] lg:mt-[10vh]">
-        <div className="eyebrow mb-6">A community connector</div>
+        <div className="eyebrow mb-6">{copy.landing.eyebrow}</div>
         <h1 className="m-0 mb-[22px] text-balance font-display text-[clamp(54px,12vw,88px)] leading-[0.96] tracking-[-0.02em] text-ink">
-          Find what you need, <em className="text-teal italic">nearby.</em>
+          {copy.landing.heading} <em className="text-teal italic">{copy.landing.headingEm}</em>
         </h1>
         <p className="m-0 mb-9 max-w-[36ch] text-pretty text-[17px] leading-[1.5] text-ink-2">
-          A quiet way to discover the gardens, kitchens, libraries and repair
-          benches already running in your council — and the people behind them.
+          {copy.landing.sub}
         </p>
         <div className="flex flex-wrap items-center gap-3.5">
           <button type="button" className="btn btn-primary" onClick={onStart}>
-            Get started
+            {copy.landing.cta}
             <svg className="arrow" viewBox="0 0 24 24" aria-hidden="true">
               <path
                 d="M5 12h14M13 6l6 6-6 6"
@@ -43,14 +45,14 @@ export default function Landing({
             className="btn btn-ghost"
             onClick={onHowItWorks}
           >
-            How it works
+            {copy.landing.howItWorks}
           </button>
           <button
             type="button"
             className="btn btn-ghost"
             onClick={onSubmitGroup}
           >
-            Share a group
+            {copy.landing.shareGroup}
           </button>
         </div>
       </div>
@@ -58,24 +60,17 @@ export default function Landing({
       <OpenNow />
 
       <div className="mt-10 grid grid-cols-1 gap-x-4 gap-y-5 border-t border-line pt-[22px] text-[13.5px] leading-[1.5] text-ink-2 sm:grid-cols-2 sm:gap-y-7">
-        <Cell k="For">
-          <strong className="font-medium text-ink">
-            Residents, students, new arrivals
-          </strong>{" "}
-          — anyone looking for a hand or wanting to give one.
+        <Cell k={copy.landing.forLabel}>
+          {copy.landing.forText}
         </Cell>
-        <Cell k="Across">
-          <strong className="font-medium text-ink">City of Melbourne</strong> —
-          community gardens, food relief, libraries, repair cafés, grants.
+        <Cell k={copy.landing.acrossLabel}>
+          {copy.landing.acrossText}
         </Cell>
-        <Cell k="Language">
+        <Cell k={copy.landing.languageLabel}>
           <LanguagePicker currentLang={currentLang} onSelect={onLangChange} />
         </Cell>
-        <Cell k="Built with">
-          <strong className="font-medium text-ink">
-            Real addresses, real hours.
-          </strong>{" "}
-          No directory dumps, no signups.
+        <Cell k={copy.landing.builtWithLabel}>
+          {copy.landing.builtWithText}
         </Cell>
       </div>
     </section>

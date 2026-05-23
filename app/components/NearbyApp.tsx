@@ -12,6 +12,7 @@ import Results from "./Results";
 import SubmitGroupForm from "./SubmitGroupForm";
 import GroupSubmitted from "./GroupSubmitted";
 import HowItWorks from "./HowItWorks";
+import LanguagePicker from "./LanguagePicker";
 
 type Screen = "landing" | "form" | "loading" | "results" | "submit-group" | "group-submitted" | "how-it-works";
 
@@ -167,6 +168,7 @@ export default function NearbyApp({ initialLang = "en" }: { initialLang?: string
                 + Share a group
               </button>
             )}
+            <LanguagePicker currentLang={lang} onSelect={setLang} />
           </div>
         </header>
 

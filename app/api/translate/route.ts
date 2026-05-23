@@ -1,11 +1,24 @@
 import type { AppCopy } from "@/app/lib/app-copy";
 import { BUILT_IN } from "@/app/lib/app-copy";
+import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const ANTHROPIC_URL = "https://api.anthropic.com/v1/messages";
 const MODEL = "claude-haiku-4-5-20251001"; // fast + cheap for translation
+
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key);
+}
+
+/** Normalise language name to a consistent cache key, e.g. "French" → "french" */
+function langKey(language: string) {
+  return language.trim().toLowerCase();
+}
 
 export async function POST(request: Request) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -25,7 +38,33 @@ export async function POST(request: Request) {
     return Response.json({ error: "language is required." }, { status: 400 });
   }
 
-  // Use English as the source
+  const supabase = getSupabase();
+
+  // ── 1. Check Supabase cache ────────────────────────────────────────────────
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from("translations")
+        .select("copy")
+        .eq("language", langKey(language))
+        .maybeSingle();
+
+      if (!error && data?.copy) {
+        const copyObj = data.copy as any;
+        if (copyObj && copyObj.landing && copyObj.howItWorks) {
+          console.log(`[translate] cache hit for "${language}"`);
+          return Response.json(copyObj as AppCopy);
+        } else {
+          console.log(`[translate] cache miss due to outdated keys/schema for "${language}"`);
+        }
+      }
+    } catch (err) {
+      // Non-fatal: fall through to Anthropic
+      console.warn("[translate] Supabase read failed, falling back to Anthropic:", err);
+    }
+  }
+
+  // ── 2. Generate via Anthropic ──────────────────────────────────────────────
   const source = BUILT_IN.en;
 
   const userMsg = `Translate all string values in the following JSON into ${language}.
@@ -89,6 +128,26 @@ ${JSON.stringify(source, null, 2)}`;
     parsed = JSON.parse(cleaned.slice(start, end + 1)) as AppCopy;
   } catch {
     return Response.json({ error: "Model returned malformed JSON." }, { status: 502 });
+  }
+
+  // ── 3. Persist to Supabase ────────────────────────────────────────────────
+  if (supabase) {
+    supabase
+      .from("translations")
+      .upsert(
+        {
+          language: langKey(language),
+          language_display: language,
+          copy: parsed,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "language" },
+      )
+      .then(({ error }) => {
+        if (error) console.error("[translate] Supabase upsert failed:", error.message);
+        else console.log(`[translate] stored "${language}" in Supabase`);
+      });
+    // Fire-and-forget: don't block the response
   }
 
   return Response.json(parsed);

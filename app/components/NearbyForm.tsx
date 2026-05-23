@@ -18,14 +18,7 @@ interface Props {
   onSubmit: () => void;
 }
 
-const DEMOGRAPHICS: { value: Demographic; label: string }[] = [
-  { value: "", label: "Prefer not to say" },
-  { value: "International student", label: "International student" },
-  { value: "Elderly resident", label: "Elderly resident" },
-  { value: "New arrival", label: "New arrival to Australia" },
-  { value: "Local family", label: "Local family" },
-  { value: "Other", label: "Other" },
-];
+
 
 type GeoState = "idle" | "loading" | "error";
 
@@ -33,6 +26,14 @@ export default function NearbyForm(props: Props) {
   const { suburb, setSuburb, need, setNeed, demographic, setDemographic, lang, error, onBack, onSubmit } = props;
   const cp = useCopy();
   const f = cp.form;
+  const demographicsList = [
+    { value: "" as const, label: f.demographics.none },
+    { value: "International student" as const, label: f.demographics.student },
+    { value: "Elderly resident" as const, label: f.demographics.elderly },
+    { value: "New arrival" as const, label: f.demographics.newArrival },
+    { value: "Local family" as const, label: f.demographics.family },
+    { value: "Other" as const, label: f.demographics.other },
+  ];
   const [geoState, setGeoState] = useState<GeoState>("idle");
   const [geoError, setGeoError] = useState<string | null>(null);
   const isRtl = ["ar", "Arabic", "he", "Hebrew", "fa", "Persian", "ur", "Urdu"].includes(lang);
@@ -161,7 +162,7 @@ export default function NearbyForm(props: Props) {
             id="suburb"
             type="text"
             className="input-base"
-            placeholder="e.g. Carlton, North Melbourne, Kensington"
+            placeholder={f.suburbPlaceholder}
             autoComplete="off"
             value={suburb}
             onChange={(e) => setSuburb(e.target.value)}
@@ -195,7 +196,7 @@ export default function NearbyForm(props: Props) {
           <textarea
             id="need"
             className="input-base min-h-[96px] resize-y leading-[1.45]"
-            placeholder="e.g. somewhere to grow vegetables, free meals this week, help repairing a bike, a quiet place to study, somewhere to volunteer on weekends"
+            placeholder={f.needPlaceholder}
             value={need}
             onChange={(e) => setNeed(e.target.value)}
             required
@@ -217,8 +218,8 @@ export default function NearbyForm(props: Props) {
             onChange={(e) => setDemographic(e.target.value)}
             aria-describedby="demographic-hint"
           >
-            {DEMOGRAPHICS.map((d) => (
-              <option key={d.label} value={d.value}>
+            {demographicsList.map((d) => (
+              <option key={d.value} value={d.value}>
                 {d.label}
               </option>
             ))}

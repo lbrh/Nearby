@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 
 export const LANGUAGES: { name: string; native: string }[] = [
   { name: "English", native: "English" },
@@ -61,7 +62,12 @@ interface Props {
 
 export default function LanguagePicker({ currentLang, onSelect }: Props) {
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [query, setQuery] = useState("");
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
   const inputRef = useRef<HTMLInputElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
 
@@ -123,7 +129,7 @@ export default function LanguagePicker({ currentLang, onSelect }: Props) {
       </button>
 
       {/* Modal */}
-      {open && (
+      {open && mounted && createPortal(
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 p-4 backdrop-blur-sm sm:items-center"
           onClick={handleBackdrop}
@@ -191,7 +197,8 @@ export default function LanguagePicker({ currentLang, onSelect }: Props) {
               })}
             </ul>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
