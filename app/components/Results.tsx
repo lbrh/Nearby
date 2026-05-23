@@ -6,6 +6,7 @@ import { useCopy } from "@/app/lib/copy-context";
 import ServiceCard from "./ServiceCard";
 import FollowUpChat from "./FollowUpChat";
 import CommunityGroups from "./CommunityGroups";
+import ResultsMap from "./ResultsMap";
 
 interface Props {
   data: NearbyResponse;
@@ -20,6 +21,7 @@ interface Props {
 export default function Results({ data, lang, suburb, need, demographic, onRestart, onSubmitGroup }: Props) {
   const copy = useCopy();
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const services = data.services.slice(0, 3);
 
   useEffect(() => {
     headingRef.current?.focus();
@@ -28,8 +30,9 @@ export default function Results({ data, lang, suburb, need, demographic, onResta
   const chips = [suburb, demographic].filter(Boolean);
 
   return (
-    <section className="screen-fade flex flex-1 flex-col gap-[18px] lg:max-w-none">
-      <div className="mb-1.5 flex flex-col items-start justify-between gap-[18px] sm:flex-row">
+    <section className="screen-fade flex flex-1 flex-col gap-6 lg:max-w-none">
+      {/* Header */}
+      <div className="flex flex-col items-start justify-between gap-4 sm:flex-row">
         <div className="flex-1">
           <div className="mb-2.5 flex flex-wrap items-center gap-2 font-mono text-[10.5px] uppercase tracking-[0.14em] text-ink-3">
             {chips.map((c) => (
@@ -41,11 +44,11 @@ export default function Results({ data, lang, suburb, need, demographic, onResta
           <h2
             ref={headingRef}
             tabIndex={-1}
-            className="m-0 mb-1.5 text-balance font-display text-[clamp(28px,5.6vw,38px)] leading-[1.1] tracking-[-0.015em] focus:outline-none"
+            className="m-0 mb-1.5 text-balance font-display text-[clamp(26px,5vw,36px)] leading-[1.1] tracking-[-0.015em] focus:outline-none"
           >
             {copy.results.title}
           </h2>
-          <p className="m-0 max-w-[52ch] text-pretty text-[15.5px] text-ink-2">
+          <p className="m-0 max-w-[56ch] text-pretty text-[15px] text-ink-2">
             {data.intro}
           </p>
         </div>
@@ -58,14 +61,23 @@ export default function Results({ data, lang, suburb, need, demographic, onResta
         </button>
       </div>
 
-      <div className="mt-2 grid gap-3.5 lg:grid-cols-3">
-        {data.services.slice(0, 3).map((s, i) => (
-          <ServiceCard key={i} service={s} index={i} />
-        ))}
+      {/* Two-column: cards (left) + map (right) */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {/* Left: stacked cards */}
+        <div className="flex flex-col gap-3">
+          {services.map((s, i) => (
+            <ServiceCard key={i} service={s} index={i} />
+          ))}
+        </div>
+
+        {/* Right: map */}
+        <div className="h-[400px] lg:sticky lg:top-6 lg:h-[calc(100vh-8rem)] lg:max-h-[560px]">
+          <ResultsMap services={services} />
+        </div>
       </div>
 
-      <FollowUpChat lang={lang} suburb={suburb} need={need} demographic={demographic} services={data.services.slice(0, 3)} />
-
+      {/* Below the fold */}
+      <FollowUpChat lang={lang} suburb={suburb} need={need} demographic={demographic} services={services} />
       <CommunityGroups suburb={suburb} onSubmitGroup={onSubmitGroup} />
     </section>
   );

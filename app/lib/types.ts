@@ -63,3 +63,23 @@ export interface CommunityGroup {
   schedule: string;
   created_at?: string;
 }
+
+export type RepeatType = "none" | "daily" | "weekly" | "monthly" | "yearly";
+
+export interface Event {
+  id?: string;
+  user_id?: string;
+  title: string;
+  description: string;
+  category: string;
+  suburb: string;
+  address: string;
+  phone: string;
+  email: string;
+  website: string;
+  event_date: string;
+  start_time: string;
+  end_time: string;
+  repeat_type: RepeatType;
+  created_at?: string;
+}

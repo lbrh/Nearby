@@ -1,42 +1,71 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { NearbyResponse, CommunityGroup } from "@/app/lib/types";
+import { useEffect, useRef, useState } from "react";
+import type { User } from "@supabase/supabase-js";
+import type { NearbyResponse, Event } from "@/app/lib/types";
 import { detectLangFromText } from "@/app/lib/detect-lang";
 import { isRtlLang } from "@/app/lib/app-copy";
 import { CopyProvider } from "@/app/lib/copy-context";
+import { supabase } from "@/app/lib/supabase";
 import Landing from "./Landing";
 import NearbyForm from "./NearbyForm";
 import Loading from "./Loading";
 import Results from "./Results";
-import SubmitGroupForm from "./SubmitGroupForm";
-import GroupSubmitted from "./GroupSubmitted";
+import SubmitEventForm from "./SubmitEventForm";
+import EventSubmitted from "./EventSubmitted";
 import HowItWorks from "./HowItWorks";
 import LanguagePicker from "./LanguagePicker";
 
-type Screen = "landing" | "form" | "loading" | "results" | "submit-group" | "group-submitted" | "how-it-works";
+type Screen =
+  | "landing"
+  | "form"
+  | "loading"
+  | "results"
+  | "submit-event"
+  | "event-submitted"
+  | "how-it-works";
 
 const LANG_STORAGE_KEY = "nearby:lang";
 const SUBURB_STORAGE_KEY = "nearby:detected-suburb";
+const POST_AUTH_KEY = "nearby:post-auth-screen";
 
 export default function NearbyApp({ initialLang = "en" }: { initialLang?: string }) {
   const [screen, setScreen] = useState<Screen>("landing");
-
-  // lang is a full language name string, e.g. "English", "French", "zh", "ar"
   const [lang, setLangState] = useState<string>(initialLang);
-
   const [suburb, setSuburb] = useState("");
   const [need, setNeed] = useState("");
   const [demographic, setDemographic] = useState("");
   const [result, setResult] = useState<NearbyResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [submittedGroup, setSubmittedGroup] = useState<CommunityGroup | null>(null);
+  const [submittedEvent, setSubmittedEvent] = useState<Event | null>(null);
   const [returnScreen, setReturnScreen] = useState<Screen>("landing");
+  const [user, setUser] = useState<User | null>(null);
+  // Track the lang that was used for the last fetch, to re-fetch when it changes
+  const resultLangRef = useRef<string | null>(null);
 
   const isRtl = isRtlLang(lang);
   const dir = isRtl ? "rtl" : "ltr";
 
-  // Load saved language from localStorage on mount (overrides server-detected lang)
+  // Auth: load session on mount and handle post-OAuth redirect
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+
+      const pending = localStorage.getItem(POST_AUTH_KEY);
+      if (pending === "submit-event" && session?.user) {
+        localStorage.removeItem(POST_AUTH_KEY);
+        setScreen("submit-event");
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Persist lang preference
   useEffect(() => {
     try {
       const saved = localStorage.getItem(LANG_STORAGE_KEY);
@@ -48,15 +77,10 @@ export default function NearbyApp({ initialLang = "en" }: { initialLang?: string
 
   function setLang(value: string) {
     setLangState(value);
-    try {
-      localStorage.setItem(LANG_STORAGE_KEY, value);
-    } catch {
-      // ignore
-    }
+    try { localStorage.setItem(LANG_STORAGE_KEY, value); } catch { /* ignore */ }
     document.documentElement.lang = value;
   }
 
-  // Sync html[lang] on any change
   useEffect(() => {
     document.documentElement.lang = lang;
   }, [lang]);
@@ -70,9 +94,39 @@ export default function NearbyApp({ initialLang = "en" }: { initialLang?: string
 
   function handleNeedChange(value: string) {
     setNeed(value);
-    // Auto-detect Arabic/Chinese script while typing
     const detected = detectLangFromText(value);
     if (detected && detected !== lang) setLang(detected);
+  }
+
+  async function fetchNearby(params: { suburb: string; need: string; demographic: string; lang: string; returnToResults?: boolean }) {
+    setScreen("loading");
+    try {
+      const res = await fetch("/api/nearby", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ suburb: params.suburb, need: params.need, demographic: params.demographic, lang: params.lang }),
+      });
+      if (!res.ok) {
+        const j = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(j.error ?? `Request failed (${res.status})`);
+      }
+      const data = (await res.json()) as NearbyResponse;
+      resultLangRef.current = params.lang;
+      setResult(data);
+      setScreen("results");
+    } catch (err) {
+      console.error(err);
+      if (params.returnToResults) {
+        setScreen("results"); // stay on results if retranslation fails
+      } else {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Sorry — Nearby couldn't reach the service just now. Please try again.",
+        );
+        setScreen("form");
+      }
+    }
   }
 
   async function handleSubmit() {
@@ -81,30 +135,16 @@ export default function NearbyApp({ initialLang = "en" }: { initialLang?: string
       setError("Please fill in both your suburb and what you're looking for.");
       return;
     }
-    setScreen("loading");
-    try {
-      const res = await fetch("/api/nearby", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ suburb, need, demographic, lang }),
-      });
-      if (!res.ok) {
-        const j = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(j.error ?? `Request failed (${res.status})`);
-      }
-      const data = (await res.json()) as NearbyResponse;
-      setResult(data);
-      setScreen("results");
-    } catch (err) {
-      console.error(err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Sorry — Nearby couldn't reach the service just now. Please try again.",
-      );
-      setScreen("form");
-    }
+    await fetchNearby({ suburb, need, demographic, lang });
   }
+
+  // Re-fetch results in new language when user changes lang on results screen
+  useEffect(() => {
+    if (screen !== "results") return;
+    if (resultLangRef.current === null || resultLangRef.current === lang) return;
+    fetchNearby({ suburb, need, demographic, lang, returnToResults: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
 
   function reset() {
     setResult(null);
@@ -112,14 +152,14 @@ export default function NearbyApp({ initialLang = "en" }: { initialLang?: string
     setScreen("landing");
   }
 
-  function goToSubmitGroup(from: Screen) {
+  function goToSubmitEvent(from: Screen) {
     setReturnScreen(from);
-    setScreen("submit-group");
+    setScreen("submit-event");
   }
 
-  function handleGroupSuccess(group: CommunityGroup) {
-    setSubmittedGroup(group);
-    setScreen("group-submitted");
+  function handleEventSuccess(event: Event) {
+    setSubmittedEvent(event);
+    setScreen("event-submitted");
   }
 
   const screenLabel: Record<Screen, string> = {
@@ -127,8 +167,8 @@ export default function NearbyApp({ initialLang = "en" }: { initialLang?: string
     form: "Find nearby services",
     loading: "Searching for services",
     results: "Results",
-    "submit-group": "Share a community group",
-    "group-submitted": "Group submitted",
+    "submit-event": "Add your own events",
+    "event-submitted": "Event submitted",
     "how-it-works": "How it works",
   };
 
@@ -159,13 +199,23 @@ export default function NearbyApp({ initialLang = "en" }: { initialLang?: string
             </span>
           </button>
           <div className="flex items-center gap-2">
-            {screen !== "submit-group" && screen !== "group-submitted" && (
+            {screen !== "submit-event" && screen !== "event-submitted" && (
               <button
                 type="button"
-                onClick={() => goToSubmitGroup(screen)}
+                onClick={() => goToSubmitEvent(screen)}
                 className="rounded-full border border-line bg-paper px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.08em] text-ink-2 hover:border-line-strong hover:text-ink"
               >
-                + Share a group
+                + Add your own events
+              </button>
+            )}
+            {user && (
+              <button
+                type="button"
+                onClick={() => supabase.auth.signOut()}
+                className="rounded-full border border-line bg-paper px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.08em] text-ink-2 hover:border-line-strong hover:text-ink"
+                title={user.email}
+              >
+                Sign out
               </button>
             )}
             <LanguagePicker currentLang={lang} onSelect={setLang} />
@@ -177,7 +227,7 @@ export default function NearbyApp({ initialLang = "en" }: { initialLang?: string
           <Landing
             onStart={() => setScreen("form")}
             onHowItWorks={() => setScreen("how-it-works")}
-            onSubmitGroup={() => goToSubmitGroup("landing")}
+            onSubmitGroup={() => goToSubmitEvent("landing")}
             currentLang={lang}
             onLangChange={setLang}
           />
@@ -211,18 +261,19 @@ export default function NearbyApp({ initialLang = "en" }: { initialLang?: string
             need={need}
             demographic={demographic}
             onRestart={reset}
-            onSubmitGroup={() => goToSubmitGroup("results")}
+            onSubmitGroup={() => goToSubmitEvent("results")}
           />
         )}
-        {screen === "submit-group" && (
-          <SubmitGroupForm
+        {screen === "submit-event" && (
+          <SubmitEventForm
+            user={user}
             onBack={() => setScreen(returnScreen)}
-            onSuccess={handleGroupSuccess}
+            onSuccess={handleEventSuccess}
           />
         )}
-        {screen === "group-submitted" && submittedGroup && (
-          <GroupSubmitted
-            group={submittedGroup}
+        {screen === "event-submitted" && submittedEvent && (
+          <EventSubmitted
+            event={submittedEvent}
             onDone={() => setScreen(returnScreen)}
           />
         )}

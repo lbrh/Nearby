@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { Demographic } from "@/app/lib/types";
 import { useCopy } from "@/app/lib/copy-context";
+import { MELBOURNE_SUBURBS } from "@/app/lib/suburbs";
 import VoiceInput from "./VoiceInput";
 
 interface Props {
@@ -18,9 +18,129 @@ interface Props {
   onSubmit: () => void;
 }
 
-
-
 type GeoState = "idle" | "loading" | "error";
+
+function SuburbAutocomplete({
+  value,
+  onChange,
+  placeholder,
+  lang,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  lang: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState(value);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [activeIdx, setActiveIdx] = useState(-1);
+
+  const matches = query.trim().length > 0
+    ? MELBOURNE_SUBURBS.filter((s) => s.toLowerCase().startsWith(query.toLowerCase()))
+        .concat(
+          MELBOURNE_SUBURBS.filter(
+            (s) => !s.toLowerCase().startsWith(query.toLowerCase()) && s.toLowerCase().includes(query.toLowerCase())
+          )
+        )
+        .slice(0, 8)
+    : [];
+
+  const isValid = MELBOURNE_SUBURBS.some((s) => s.toLowerCase() === value.toLowerCase());
+
+  useEffect(() => {
+    setQuery(value);
+  }, [value]);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const v = e.target.value;
+    setQuery(v);
+    onChange(v);
+    setOpen(true);
+    setActiveIdx(-1);
+  }
+
+  function select(suburb: string) {
+    setQuery(suburb);
+    onChange(suburb);
+    setOpen(false);
+    setActiveIdx(-1);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (!open || matches.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIdx((i) => Math.min(i + 1, matches.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIdx((i) => Math.max(i - 1, 0));
+    } else if (e.key === "Enter" && activeIdx >= 0) {
+      e.preventDefault();
+      select(matches[activeIdx]);
+    } else if (e.key === "Escape") {
+      setOpen(false);
+    }
+  }
+
+  return (
+    <div ref={containerRef} className="relative">
+      <input
+        id="suburb"
+        type="text"
+        className={`input-base ${value && !isValid ? "border-amber-400 focus:ring-amber-300" : ""}`}
+        placeholder={placeholder}
+        autoComplete="off"
+        value={query}
+        onChange={handleInputChange}
+        onFocus={() => query.trim().length > 0 && setOpen(true)}
+        onKeyDown={handleKeyDown}
+        required
+        aria-required="true"
+        role="combobox"
+        aria-autocomplete="list"
+        aria-expanded={open && matches.length > 0}
+        dir={["ar", "Arabic", "he", "Hebrew", "fa", "Persian", "ur", "Urdu"].includes(lang) ? "rtl" : "ltr"}
+      />
+      {value && !isValid && query.length > 2 && (
+        <p className="mt-1.5 text-[12px] text-amber-700">
+          Choose a suburb from the list — type to filter.
+        </p>
+      )}
+      {open && matches.length > 0 && (
+        <ul
+          role="listbox"
+          className="absolute left-0 right-0 top-full z-50 mt-1 max-h-[200px] overflow-auto rounded-xl border border-line bg-white py-1 shadow-lg"
+        >
+          {matches.map((s, i) => (
+            <li
+              key={s}
+              role="option"
+              aria-selected={i === activeIdx}
+              onMouseDown={() => select(s)}
+              onMouseEnter={() => setActiveIdx(i)}
+              className={`cursor-pointer px-4 py-2 text-[14px] ${
+                i === activeIdx ? "bg-teal-soft text-ink" : "text-ink hover:bg-[#f5f5f3]"
+              }`}
+            >
+              {s}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export default function NearbyForm(props: Props) {
   const { suburb, setSuburb, need, setNeed, demographic, setDemographic, lang, error, onBack, onSubmit } = props;
@@ -40,7 +160,8 @@ export default function NearbyForm(props: Props) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   const errorId = "form-error";
 
-  // Move focus to heading when this screen mounts
+  const suburbIsValid = MELBOURNE_SUBURBS.some((s) => s.toLowerCase() === suburb.toLowerCase());
+
   useEffect(() => {
     headingRef.current?.focus();
   }, []);
@@ -64,9 +185,12 @@ export default function NearbyForm(props: Props) {
           if (!res.ok) throw new Error("Geocoding failed");
           const data = (await res.json()) as { address: Record<string, string> };
           const a = data.address;
-          const name = a.suburb ?? a.neighbourhood ?? a.city_district ?? a.town ?? a.city ?? "";
-          if (name) {
-            setSuburb(name);
+          const detected = a.suburb ?? a.neighbourhood ?? a.city_district ?? a.town ?? a.city ?? "";
+          // Try to match to known suburbs
+          const match = MELBOURNE_SUBURBS.find((s) => s.toLowerCase() === detected.toLowerCase());
+          const finalSuburb = match ?? detected;
+          if (finalSuburb) {
+            setSuburb(finalSuburb);
             setGeoState("idle");
           } else {
             throw new Error("Couldn't determine your suburb from your location.");
@@ -86,6 +210,12 @@ export default function NearbyForm(props: Props) {
       },
       { timeout: 10000 },
     );
+  }
+
+  function handleFormSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!suburbIsValid) return;
+    onSubmit();
   }
 
   return (
@@ -122,7 +252,7 @@ export default function NearbyForm(props: Props) {
       )}
 
       <form
-        onSubmit={(e) => { e.preventDefault(); onSubmit(); }}
+        onSubmit={handleFormSubmit}
         noValidate
         aria-describedby={error ? errorId : undefined}
       >
@@ -158,17 +288,11 @@ export default function NearbyForm(props: Props) {
               </button>
             </div>
           </div>
-          <input
-            id="suburb"
-            type="text"
-            className="input-base"
-            placeholder={f.suburbPlaceholder}
-            autoComplete="off"
+          <SuburbAutocomplete
             value={suburb}
-            onChange={(e) => setSuburb(e.target.value)}
-            required
-            aria-required="true"
-            aria-describedby={geoError ? "geo-error" : undefined}
+            onChange={setSuburb}
+            placeholder={f.suburbPlaceholder}
+            lang={lang}
           />
           {geoError && (
             <div id="geo-error" role="alert" className="mt-1.5 text-[12.5px] text-[#7A2E08]">
@@ -230,7 +354,11 @@ export default function NearbyForm(props: Props) {
         {/* submit */}
         <div className="mt-3.5 flex flex-col items-stretch justify-between gap-3.5 sm:flex-row sm:items-center">
           <span className="font-mono text-[11px] uppercase tracking-[0.1em] text-ink-3">{f.meta}</span>
-          <button type="submit" className="btn btn-primary justify-center sm:justify-start">
+          <button
+            type="submit"
+            disabled={!suburbIsValid || !need.trim()}
+            className="btn btn-primary justify-center disabled:cursor-not-allowed disabled:opacity-40 sm:justify-start"
+          >
             {f.submit}
             <svg className="arrow" viewBox="0 0 24 24" aria-hidden="true">
               <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />

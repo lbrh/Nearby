@@ -131,7 +131,7 @@ export default function LanguagePicker({ currentLang, onSelect }: Props) {
       {/* Modal */}
       {open && mounted && createPortal(
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 p-4 backdrop-blur-sm sm:items-center"
+          className="fixed inset-0 z-50 flex items-start justify-center bg-black/30 p-4 pt-[max(1rem,env(safe-area-inset-top))] backdrop-blur-sm sm:items-center sm:pt-4"
           onClick={handleBackdrop}
           role="dialog"
           aria-modal="true"
@@ -139,10 +139,11 @@ export default function LanguagePicker({ currentLang, onSelect }: Props) {
         >
           <div
             ref={dialogRef}
-            className="w-full max-w-md rounded-2xl border border-line bg-paper shadow-xl"
+            className="flex w-full max-w-md flex-col rounded-2xl border border-line bg-paper shadow-xl"
+            style={{ maxHeight: "min(90dvh, 600px)" }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-line px-5 py-4">
+            <div className="flex shrink-0 items-center justify-between border-b border-line px-5 py-4">
               <h2 className="m-0 font-display text-[22px] tracking-[-0.01em]">Choose language</h2>
               <button
                 type="button"
@@ -156,8 +157,8 @@ export default function LanguagePicker({ currentLang, onSelect }: Props) {
               </button>
             </div>
 
-            {/* Search */}
-            <div className="px-5 pt-4 pb-2">
+            {/* Search — fixed below header */}
+            <div className="shrink-0 px-5 pt-4 pb-2">
               <input
                 ref={inputRef}
                 type="text"
@@ -169,11 +170,11 @@ export default function LanguagePicker({ currentLang, onSelect }: Props) {
               />
             </div>
 
-            {/* List */}
+            {/* List — scrollable, takes remaining height */}
             <ul
               role="listbox"
               aria-label="Languages"
-              className="max-h-[52vh] overflow-y-auto px-2 pb-4"
+              className="min-h-0 flex-1 overflow-y-auto px-2 pb-4"
             >
               {filtered.length === 0 && (
                 <li className="px-3 py-3 text-[14px] text-ink-3">No match — try a different spelling.</li>
