@@ -1,26 +1,351 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ─────────────────────────────────────────────
+   Nearby design tokens (Tailwind v4 @theme)
+   ───────────────────────────────────────────── */
+@theme {
+  --color-bg: #f5f1ea;
+  --color-bg-deep: #ede7dc;
+  --color-paper: #fbf8f2;
+  --color-ink: #1a1612;
+  --color-ink-2: #514a40;
+  --color-ink-3: #8a8175;
+  --color-line: rgba(26, 22, 18, 0.09);
+  --color-line-strong: rgba(26, 22, 18, 0.18);
+  --color-teal: #1d9e75;
+  --color-teal-deep: #15795a;
+  --color-teal-tint: #e4f1eb;
+  --color-teal-soft: #f0f7f3;
+
+  --font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-display: var(--font-instrument-serif), "Instrument Serif", serif;
+
+  --radius-card: 14px;
+  --shadow-card:
+    0 1px 0 rgba(26, 22, 18, 0.04), 0 12px 32px -16px rgba(26, 22, 18, 0.12);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ─────────────────────────────────────────────
+   Base
+   ───────────────────────────────────────────── */
+html,
+body {
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Subtle grain so the cream surface isn't flat */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: radial-gradient(rgba(26, 22, 18, 0.025) 1px, transparent 1px);
+  background-size: 3px 3px;
+  mix-blend-mode: multiply;
+  opacity: 0.8;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* ─────────────────────────────────────────────
+   Reusable component classes (the bits where
+   plain Tailwind gets noisy)
+   ───────────────────────────────────────────── */
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.eyebrow::before {
+  content: "";
+  width: 28px;
+  height: 1px;
+  background: var(--color-ink-3);
+  display: inline-block;
+}
+
+.label-mono {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ink-3);
+}
+
+.input-base {
+  width: 100%;
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-family: inherit;
+  font-size: 16px;
+  color: var(--color-ink);
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+.input-base:focus {
+  outline: none;
+  border-color: var(--color-teal);
+  box-shadow: 0 0 0 4px var(--color-teal-tint);
+  background: #fff;
+}
+
+.select-base {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23514A40' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 40px;
+}
+
+.btn {
+  appearance: none;
+  border: none;
+  background: var(--color-ink);
+  color: var(--color-bg);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 500;
+  padding: 16px 24px;
+  border-radius: 999px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition:
+    transform 0.15s ease,
+    background 0.15s ease;
+}
+.btn:hover {
+  transform: translateY(-1px);
+  background: #000;
+}
+.btn-primary {
+  background: var(--color-teal);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: var(--color-teal-deep);
+}
+.btn-ghost {
+  background: transparent;
+  color: var(--color-ink-2);
+  padding: 16px 6px;
+}
+.btn-ghost:hover {
+  color: var(--color-ink);
+  background: transparent;
+  transform: none;
+}
+.btn .arrow {
+  width: 18px;
+  height: 18px;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  fill: none;
+  transition: transform 0.2s ease;
+}
+.btn:hover .arrow {
+  transform: translateX(3px);
+}
+
+/* Segmented language picker */
+.seg {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  padding: 5px;
+}
+.seg button {
+  appearance: none;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 13.5px;
+  color: var(--color-ink-2);
+  padding: 10px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-weight: 500;
+  line-height: 1.1;
+}
+.seg button:hover {
+  color: var(--color-ink);
+}
+.seg button.active {
+  background: var(--color-ink);
+  color: var(--color-bg);
+}
+.seg button .native {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  opacity: 0.65;
+  margin-top: 2px;
+}
+.seg button.active .native {
+  opacity: 0.8;
+}
+@media (max-width: 480px) {
+  .seg {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Cards */
+.card {
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
+  padding: 22px 22px 20px;
+  box-shadow: var(--shadow-card);
+  position: relative;
+  overflow: hidden;
+}
+.card .num {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 42px;
+  color: var(--color-teal);
+  opacity: 0.25;
+  line-height: 1;
+  user-select: none;
+}
+
+/* Loading dot ping */
+.ping {
+  width: 10px;
+  height: 10px;
+  background: var(--color-teal);
+  border-radius: 999px;
+  position: relative;
+}
+.ping::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: 999px;
+  border: 1.5px solid var(--color-teal);
+  opacity: 0.5;
+  animation: ping 1.6s ease-out infinite;
+}
+@keyframes ping {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+/* Loading step ticks */
+.tick {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  border: 1.5px solid var(--color-ink-3);
+  flex-shrink: 0;
+  position: relative;
+  transition: all 0.3s ease;
+}
+.step.done {
+  color: var(--color-ink);
+}
+.step.done .tick {
+  background: var(--color-teal);
+  border-color: var(--color-teal);
+}
+.step.done .tick::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border-right: 1.5px solid #fff;
+  border-bottom: 1.5px solid #fff;
+  transform: rotate(45deg);
+}
+.step.active {
+  color: var(--color-ink);
+}
+.step.active .tick {
+  border-color: var(--color-teal);
+  animation: pulseDot 1s ease-in-out infinite;
+}
+@keyframes pulseDot {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--color-teal-tint);
+  }
+  50% {
+    box-shadow: 0 0 0 6px var(--color-teal-tint);
+  }
+}
+
+/* Screen fade-in */
+.screen-fade {
+  animation: fadeUp 0.42s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* RTL handling for Arabic */
+[dir="rtl"] .card .num {
+  right: auto;
+  left: 22px;
+}
+[dir="rtl"] .eyebrow::before {
+  margin-left: 0;
 }
