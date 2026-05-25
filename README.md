@@ -1,4 +1,4 @@
-# Nearby — Melbourne Community Connector
+# [Nearby](nearby-claude.vercel.app) — Melbourne Community Connector
 
 > **"Nobody. Can. Find. Stuff."**
 >
